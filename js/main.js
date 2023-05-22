@@ -77,24 +77,44 @@ let right_or_wrong_array = [];
 let marks = 0;
 let current_q_no = 1;
 
-function get_min_max_numbers(diff_lvl) {
+function get_min_max_numbers(diff_lvl,sign) {
   let maximum_num;
   let mininum_num;
-  if (diff_lvl === 'very_easy') {
-    mininum_num = 1;
-    maximum_num = 10;
-  } else if (diff_lvl === 'easy') {
-    mininum_num = 11;
-    maximum_num = 50;
-  } else if (diff_lvl === 'medium') {
-    mininum_num = 51;
-    maximum_num = 100;
-  } else if (diff_lvl === 'hard') {
-    mininum_num = 101;
-    maximum_num = 1000;
-  } else if (diff_lvl === 'very_hard') {
-    mininum_num = 1001;
-    maximum_num = 10000;
+  if(sign === 'square' || sign === 'squareroot'){
+    if (diff_lvl === 'very_easy') {
+      mininum_num = 2;
+      maximum_num = 10;
+    } else if (diff_lvl === 'easy') {
+      mininum_num = 3;
+      maximum_num = 10;
+    } else if (diff_lvl === 'medium') {
+      mininum_num = 4;
+      maximum_num = 10;
+    } else if (diff_lvl === 'hard') {
+      mininum_num = 8;
+      maximum_num = 50;
+    } else if (diff_lvl === 'very_hard') {
+      mininum_num = 10;
+      maximum_num = 100;
+    }
+  }
+  else{
+    if (diff_lvl === 'very_easy') {
+      mininum_num = 1;
+      maximum_num = 10;
+    } else if (diff_lvl === 'easy') {
+      mininum_num = 11;
+      maximum_num = 50;
+    } else if (diff_lvl === 'medium') {
+      mininum_num = 51;
+      maximum_num = 100;
+    } else if (diff_lvl === 'hard') {
+      mininum_num = 101;
+      maximum_num = 1000;
+    } else if (diff_lvl === 'very_hard') {
+      mininum_num = 1001;
+      maximum_num = 10000;
+    }
   }
   return [mininum_num, maximum_num];
 }
@@ -102,11 +122,11 @@ function get_min_max_numbers(diff_lvl) {
 function generateNumbers_and_sign(diff_lvl, sign) {
   let arithmetic_sign;
 
-  min_max = get_min_max_numbers(diff_lvl);
+  min_max = get_min_max_numbers(diff_lvl,sign);
   min = min_max[0];
   max = min_max[1];
-  upper_Number = Math.floor(Math.random() * (max - min + 1) + min);
-  down_Number = Math.floor(Math.random() * (upper_Number - min + 1) + min);
+  upper_Number = sign === 'square'?Math.floor(Math.random()*max):Math.floor(Math.random() * (max - min + 1) + min);
+  down_Number = sign === 'square'?Math.floor(Math.random()*min):Math.floor(Math.random() * (upper_Number - min + 1) + min);
 
   if (sign === 'addition') {
     arithmetic_sign = '+';
@@ -116,13 +136,21 @@ function generateNumbers_and_sign(diff_lvl, sign) {
     arithmetic_sign = 'x';
   } else if (sign === 'division') {
     arithmetic_sign = '/';
+  } else if (sign === 'square'){
+    arithmetic_sign = 'pow';
+  } else if(sign === 'squareroot'){
+    arithmetic_sign = 'sqrt';
+    down_Number<upper_Number?down_Number**=2:down_Number=upper_Number**2;
   }
 
   // AVOIDING REPEATING PREVIOUS QUESTION's NUMBERS
   for (const num in questions_array) {
+
+    if(arithmetic_sign === 'sqrt' && down_Number == questions_array[num][1]){
+      down_Number=(down_Number-(Math.floor(Math.random()*10)))**2;
+    }
     if (
-      upper_Number == questions_array[num][0] &&
-      down_Number == questions_array[num][1]
+      (upper_Number == questions_array[num][0] && down_Number == questions_array[num][1])
     ) {
       generateNumbers_and_sign(diff_lvl, sign);
     }
@@ -189,6 +217,10 @@ function examiner(up_number, down_number, sign_of_question, answer_of_student) {
       real_answer = up_number - down_number;
     } else if (sign_of_question === 'x') {
       real_answer = up_number * down_number;
+    } else if (sign_of_question === 'pow') {
+      real_answer = up_number ** down_number;
+    } else if (sign_of_question === 'sqrt') {
+      real_answer = Math.sqrt(down_number)
     }
 
     if (real_answer === answer_of_student) {
@@ -307,7 +339,7 @@ function resultGenerator() {
       .querySelector('.question-serialno')
       .classList.add(right_or_wrong_question_box);
     each_question_template.querySelector('.q_num').innerText = q_num;
-    each_question_template.querySelector('.upNumber').innerText = upnum;
+    each_question_template.querySelector('.upNumber').innerText = sign.textContent.trim() == 'sqrt'?'':upnum;
     each_question_template.querySelector('.sign').innerText = s_of_q;
     each_question_template.querySelector('.downNum').innerText = downum;
     each_question_template
@@ -437,6 +469,9 @@ function createTestpage() {
   if (q_type == 'division') {
     document.querySelector('.input_answer_div').remove();
     document.querySelector('.division_answer_div').style.display = 'flex';
+  }
+  if (q_type == 'squareroot') {
+    document.querySelector('.upNumber_div').style.display = 'none';
   }
 
   test_title.textContent = `${q_type.toUpperCase()}`;
